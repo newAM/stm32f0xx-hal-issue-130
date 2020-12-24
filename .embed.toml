@@ -1,0 +1,9 @@
+[default.general]
+chip = "stm32f070rb"
+
+[default.probe]
+speed = 1800
+
+[default.rtt]
+enabled = true
+log_enabled = false
