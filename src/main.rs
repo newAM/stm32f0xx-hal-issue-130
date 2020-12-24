@@ -52,10 +52,6 @@ fn main() -> ! {
     let mut rcc = dp.RCC.configure().sysclk(8.mhz()).freeze(&mut dp.FLASH);
     let gpioa = dp.GPIOA.split(&mut rcc);
 
-    // let gpiob = dp.GPIOB.split(&mut rcc);
-    // let syscfg = dp.SYSCFG;
-    // let exti = dp.EXTI;
-
     let (spi1_pins, mut cs, mut rst) = cortex_m::interrupt::free(move |cs| {
         (
             (
@@ -70,21 +66,10 @@ fn main() -> ! {
     cs.set_high().unwrap();
     rst.set_high().unwrap();
 
-    let mut delay = Delay::new(cp.SYST, &rcc);
-    let spi = Spi::spi1(dp.SPI1, spi1_pins, enc28j60::MODE, 10.khz(), &mut rcc);
-    let mut enc28j60 = Enc28j60::new(
-        spi,
-        OldOutputPin::new(cs),
-        enc28j60::Unconnected,
-        OldOutputPin::new(rst),
-        &mut delay,
-        1024,
-        [0x12, 0x34, 0x00, 0x00, 0x00, 0x00],
-    )
-    .unwrap();
-
-    let pending: u8 = enc28j60.pending_packets().unwrap();
-    rprintln!("pending = {}", pending);
+    let mut spi = Spi::spi1(dp.SPI1, spi1_pins, enc28j60::MODE, 10.khz(), &mut rcc);
+    cs.set_low().unwrap();
+    spi.write(&[0x12, 0x34, 0x56, 0x78]);
+    cs.set_high().unwrap();
 
     loop {
         compiler_fence(SeqCst);
